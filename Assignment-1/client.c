@@ -11,6 +11,8 @@
 #define PORT 5555
 #define BUFSIZE 1024
 
+pthread_t thread1, thread2;
+
 void * SendMessage(void * arg) {
 
     int client_socket = (int) arg;
@@ -20,11 +22,16 @@ void * SendMessage(void * arg) {
     while(1) {
         // printf("%s ", "Enter your mssg:");
         fgets(Buffer, BUFSIZE, stdin);
-        printf("Input taken\n");
+        // printf("Input taken\n");
+        if (strncmp(Buffer, "exit", 4) == 0) {
+            close(client_socket);
+            pthread_exit(&thread2);
+            return NULL;
+        }
         if (send(client_socket, Buffer, strlen(Buffer), 0) == -1) {
             perror("send error\n");
         }
-        printf("Sent done\n");
+        // printf("Sent done\n");
     }
 }
 
@@ -44,14 +51,11 @@ void * ReceiveMessage(void * arg) {
                 perror("recv error!\n");
             }
             close(socket);
+            pthread_exit(&thread1);
             return NULL;
         }
         // printf("MssgRecvStatus: %d\n", MssgRecvStatus);
         // Buffer[strlen(Buffer) - 1] = '\0';
-        if ( strncmp(Buffer, "exit", 4) == 0 ) {
-            close(socket);
-            return NULL;
-        }
         printf("\n%s\n", Buffer);
     }
     return NULL;
@@ -111,7 +115,6 @@ int main(int argc, char const *argv[])
         perror("send error\n");
     }
 
-    pthread_t thread1, thread2;
     pthread_create(&thread1, NULL, ReceiveMessage, (void *) FileDescriptor_Socket );
     pthread_create(&thread2, NULL, SendMessage, (void *) FileDescriptor_Socket);
 

@@ -13,32 +13,35 @@
 
 #define PORT 5555
 #define BUFSIZE 1024
+#define connections 20
 
-volatile int fds[20];
-char Names[20][1024];
+volatile int fds[connections];
+char Names[connections][1024];
 pthread_mutex_t lock;
-pthread_t tid[20];
+pthread_t tid[connections];
 
 struct Arguments
 {
     int client_socket;
     int server_socket;
-    int connections;
 };
 
 void * ReceiveAndBroadcast(void * args) {
 
     struct Arguments *arg = args;
 
-    // printf("arg-> %d\n", arg->client_socket);
-    // printf("Name: %s\n", Names[arg->client_socket]);
+    int socket_client = arg->client_socket;
+    int socket_server = arg->server_socket;
+
+    // printf("arg-> %d\n", socket_client);
+    // printf("Name: %s\n", Names[socket_client]);
 
     while(1) {
-        printf("arg-> %d\n", arg->client_socket);
-        printf("Name: %s\n", Names[arg->client_socket]);
+        printf("arg-> %d\n", socket_client);
+        printf("Name: %s\n", Names[socket_client]);
         // sleep(1);
         int j;
-        for ( j=0; j<arg->connections; j++ ) {
+        for ( j=0; j<connections; j++ ) {
             if ( fds[j] != -1 ) {
                 printf("%d ", fds[j]);
             }
@@ -54,16 +57,17 @@ void * ReceiveAndBroadcast(void * args) {
         Returns 0 if socket hung up.
         */
         int MssgRecvStatus;
-        if ((MssgRecvStatus = recv(arg->client_socket, Buffer, BUFSIZE, 0)) <= 0) {
+        if ((MssgRecvStatus = recv(socket_client, Buffer, BUFSIZE, 0)) <= 0)
+        {
             if (MssgRecvStatus == 0) {
-                printf("socket %d hung up\n", arg->client_socket);
+                printf("socket %d hung up\n", socket_client);
             }
             else {
                 perror("recv error!\n");
             }
             pthread_mutex_lock(&lock);
-            close(arg->client_socket);
-            fds[arg->client_socket] = -1;
+            close(socket_client);
+            fds[socket_client] = -1;
             pthread_mutex_unlock(&lock);
 
             return NULL;
@@ -74,12 +78,12 @@ void * ReceiveAndBroadcast(void * args) {
 
             char NewBuffer[BUFSIZE];
             printf("Mssg Recv: %s", Buffer);
-            int len = sprintf(NewBuffer, "%s: %s", Names[arg->client_socket], Buffer);
+            int len = sprintf(NewBuffer, "%s: %s", Names[socket_client], Buffer);
             printf("NewBuffer: %s", NewBuffer);
 
             int i;
-            for (i = 3; i < arg->connections; i++) {
-                if (fds[i] != -1 && i != arg->server_socket) {
+            for (i = 3; i < connections; i++) {
+                if (fds[i] != -1 && i != socket_server) {
                     printf("FD: %d\n", i);
                     if (send(i, NewBuffer, len, 0) == -1) {
                         perror("send error!\n");
@@ -105,7 +109,6 @@ int main(int argc, char const *argv[])
 
     // fd_set Clients_FDSet;
     // int fds[20];
-    int connections = 20;
     int i;
     for (i = 0; i < connections; i++) {
         fds[i] = -1;
@@ -202,7 +205,6 @@ int main(int argc, char const *argv[])
         struct Arguments args;
         args.client_socket = FileDescriptor_ClientSocket;
         args.server_socket = FileDescriptor_Socket;
-        args.connections = connections;
 
         int error;
         pthread_t thread;
