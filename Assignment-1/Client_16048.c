@@ -39,7 +39,7 @@ void * ReceiveMessage(void * arg) {
 
     int socket = (int) arg;
     while(1) {
-        
+
         char Buffer[BUFSIZE] = {0};
 
         int MssgRecvStatus;

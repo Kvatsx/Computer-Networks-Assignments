@@ -1,0 +1,6 @@
+all:
+	gcc -pthread Server_16048.c -o server
+	gcc -pthread Client_16048.c -o client
+clean:
+	rm server
+	rm client

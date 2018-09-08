@@ -26,6 +26,44 @@ struct Arguments
     int server_socket;
 };
 
+void * RecvExit(void * args) {
+    printf("Usage: type 'exit' to close the server.\n");
+    int main_socket = (int) args;
+    while(1){
+        char Buffer[BUFSIZE] = {0};
+        char * ExitString = "Server closing now!";
+        fgets(Buffer, BUFSIZE, stdin);
+        if (strncmp(Buffer, "exit", 4) == 0)
+        {
+            int i;
+            for (i = 3; i < connections; i++) {
+                if (fds[i] != -1 && i != main_socket) {
+                    if (send(i, ExitString, strlen(ExitString), 0) == -1) {
+                        perror("send error!\n");
+                    }
+                    else {
+                        pthread_mutex_lock(&lock);
+                        close(i);
+                        fds[i] = -1;
+                        pthread_cancel(&(tid[i]));
+                        printf("Mssg sent!\n");
+                        pthread_mutex_unlock(&lock);
+                    }
+                }
+            }
+            printf("Exiting Server!\n");
+            close(main_socket);
+            pthread_mutex_destroy(&lock);
+            pthread_exit(&(tid[main_socket]));
+            return 0;
+        }
+        else {
+            printf("Usage: type 'exit' to close the server.\n");
+        }
+    }
+    return NULL;
+}
+
 void * ReceiveAndBroadcast(void * args) {
 
     struct Arguments *arg = args;
@@ -33,19 +71,7 @@ void * ReceiveAndBroadcast(void * args) {
     int socket_client = arg->client_socket;
     int socket_server = arg->server_socket;
 
-    // printf("arg-> %d\n", socket_client);
-    // printf("Name: %s\n", Names[socket_client]);
-
     while(1) {
-        // printf("arg-> %d\n", socket_client);
-        // printf("Name: %s\n", Names[socket_client]);
-        // int j;
-        // for ( j=0; j<connections; j++ ) {
-        //     if ( fds[j] != -1 ) {
-        //         printf("%d ", fds[j]);
-        //     }
-        // }
-        // printf("\n");
 
         char Buffer[BUFSIZE] = {0};
 
@@ -69,7 +95,7 @@ void * ReceiveAndBroadcast(void * args) {
             fds[socket_client] = -1;
             memset(Names[socket_client], '\0', BUFSIZE* sizeof(char));
             pthread_mutex_unlock(&lock);
-
+            pthread_exit(&tid[socket_client]);
             return NULL;
         }
         else {
@@ -169,8 +195,12 @@ int main(int argc, char const *argv[])
         printf("\n Mutex init failed!\n");
         return 1;
     }
-    int k=0;
-    while(1) {
+
+    int err;
+    err = pthread_create(&(tid[FileDescriptor_Socket]), NULL, RecvExit, (void *) FileDescriptor_Socket);
+
+    while (1)
+    {
         int FileDescriptor_ClientSocket;
         /*
         Extracts the first connection request from the queue.
@@ -207,11 +237,10 @@ int main(int argc, char const *argv[])
 
         int error;
         pthread_t thread;
-        error = pthread_create(&(tid[k]), NULL, ReceiveAndBroadcast, (void *)&args);
+        error = pthread_create(&(tid[FileDescriptor_ClientSocket]), NULL, ReceiveAndBroadcast, (void *)&args);
         if ( error != 0 ) {
             printf("Thread can't be created :[%s]\n", strerror(error));
         }
-        k++;
     }
 
     pthread_mutex_destroy(&lock);
