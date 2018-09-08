@@ -18,38 +18,45 @@ void * SendMessage(void * arg) {
 
     printf("client_socket: %d\n", client_socket);
     while(1) {
-        printf("%s ", "Enter your mssg:");
+        // printf("%s ", "Enter your mssg:");
         fgets(Buffer, BUFSIZE, stdin);
+        printf("Input taken\n");
         if (send(client_socket, Buffer, strlen(Buffer), 0) == -1) {
             perror("send error\n");
         }
     }
 }
 
-void * ReveiveMessage(void * arg) {
+void * ReceiveMessage(void * arg) {
+
     int socket = (int) arg;
     while(1) {
+        // sleep(1);
         char Buffer[BUFSIZE] = {0};
 
         int MssgRecvStatus;
-        if ((MssgRecvStatus = recv(socket, Buffer, BUFSIZE, 0)) <= 0)
-        {
-            if (MssgRecvStatus == 0)
-            {
+        if ((MssgRecvStatus = recv(socket, Buffer, BUFSIZE, 0)) <= 0) {
+            if (MssgRecvStatus == 0) {
                 printf("Server closed!\n");
             }
-            else
-            {
+            else {
                 perror("recv error!\n");
             }
             close(socket);
-            break;
+            pthread_exit(NULL);
             exit(0);
+
         }
         // printf("MssgRecvStatus: %d\n", MssgRecvStatus);
         // Buffer[strlen(Buffer) - 1] = '\0';
-        printf("Mssg Recv: %s\n", Buffer);
+        if ( strcmp(Buffer, "exit") == 0 ) {
+            close(socket);
+            exit(0);
+        }
+
+        printf("\n%s\n", Buffer);
     }
+    pthread_exit(NULL);
     return NULL;
 }
 
@@ -101,12 +108,18 @@ int main(int argc, char const *argv[])
         perror("Connection Fail\n");
         exit(1);
     }
+    printf("Please Enter your Name: ");
+    fgets(Buffer, BUFSIZE, stdin);
+    if (send(FileDescriptor_Socket, Buffer, strlen(Buffer), 0) == -1) {
+        perror("send error\n");
+    }
 
     pthread_t thread;
-    pthread_create(&thread, NULL, ReveiveMessage, (void *) FileDescriptor_Socket );
-    SendMessage((void *)FileDescriptor_Socket);
+    pthread_create(&thread, NULL, ReceiveMessage, (void *) FileDescriptor_Socket );
+    pthread_create(&thread, NULL, SendMessage, (void *) FileDescriptor_Socket);
     // while(1) {
-        
+        // SendMessage((void *)FileDescriptor_Socket);
+        // ReceiveMessage((void *)FileDescriptor_Socket);
     // }
 
     pthread_exit(NULL);

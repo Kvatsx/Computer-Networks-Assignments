@@ -14,7 +14,8 @@
 #define PORT 5555
 #define BUFSIZE 1024
 
-// int fds[20];
+int fds[20];
+char Names[20][1024];
 
 struct Arguments
 {
@@ -28,6 +29,7 @@ void * ReceiveAndBroadcast(void * args) {
     struct Arguments *arg = args;
 
     while(1) {
+        // sleep(1);
         int j;
         for ( j=0; j<arg->connections; j++ ) {
             if ( arg->fds[j] != -1 ) {
@@ -54,18 +56,20 @@ void * ReceiveAndBroadcast(void * args) {
             }
             close(arg->client_socket);
             (arg->fds)[arg->client_socket] = -1;
+            pthread_exit(NULL);
             return NULL;
         }
         else {
             // printf("MssgRecvStatus: %d\n", MssgRecvStatus);
             // Buffer[strlen(Buffer) - 1] = '\0';
-            printf("Mssg Recv: %s\n", Buffer);
-
+            char NewBuffer[BUFSIZE];
+            printf("Mssg Recv: %s", Buffer);
+            int len = sprintf(NewBuffer, "%s: %s", Names[arg->client_socket], Buffer);
             int i;
             for (i = 3; i < arg->connections; i++) {
                 if ((arg->fds)[i] != -1 && i != arg->server_socket) {
                     printf("FD: %d\n", i);
-                    if (send(i, Buffer, strlen(Buffer), 0) == -1) {
+                    if (send(i, NewBuffer, len, 0) == -1) {
                         perror("send error!\n");
                     }
                     else {
@@ -87,7 +91,7 @@ int main(int argc, char const *argv[])
     int LengthAddress = sizeof(Address);
 
     // fd_set Clients_FDSet;
-    int fds[20];
+    // int fds[20];
     int connections = 20;
     int i;
     for (i = 0; i < connections; i++) {
@@ -99,8 +103,7 @@ int main(int argc, char const *argv[])
     SOCK_STREAM: TCP connection
     Protocol value: 0
     */
-    if ((FileDescriptor_Socket = socket(AF_INET, SOCK_STREAM, 0)) == 0)
-    {
+    if ((FileDescriptor_Socket = socket(AF_INET, SOCK_STREAM, 0)) == 0) {
         perror("Socket not created!\n");
 		exit(1);
     } 
@@ -160,6 +163,25 @@ int main(int argc, char const *argv[])
         printf("ClientSocket: %d\n", FileDescriptor_ClientSocket);
         printf("new connection from port %d \n", ntohs(Address.sin_port));
         fds[FileDescriptor_ClientSocket] = FileDescriptor_ClientSocket;
+        int MssgRecvStatus;
+        if ((MssgRecvStatus = recv(FileDescriptor_ClientSocket, Names[FileDescriptor_ClientSocket], BUFSIZE, 0)) <= 0) {
+            if (MssgRecvStatus == 0) {
+                printf("Server closed!\n");
+            }
+            else {
+                perror("recv error!\n");
+            }
+            close(socket);
+            break;
+            exit(0);
+        }
+        // printf("MssgRecvStatus: %d\n", MssgRecvStatus);
+        // Buffer[strlen(Buffer) - 1] = '\0';
+        printf("Name Recv: %s\n", Names[FileDescriptor_ClientSocket]);
+        int length = strlen(Names[FileDescriptor_ClientSocket]);
+        Names[FileDescriptor_ClientSocket][length-1] = '\0';
+
+
         struct Arguments args;
         args.client_socket = FileDescriptor_ClientSocket;
         args.server_socket = FileDescriptor_Socket;
