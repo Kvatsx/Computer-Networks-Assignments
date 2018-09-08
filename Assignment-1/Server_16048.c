@@ -9,7 +9,7 @@
 #include <sys/socket.h>
 #include <sys/types.h>
 #include <sys/time.h>
-#include "pthread.h"
+#include <pthread.h>
 
 #define PORT 5555
 #define BUFSIZE 1024

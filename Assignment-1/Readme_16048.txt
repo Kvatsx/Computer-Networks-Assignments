@@ -1,3 +1,5 @@
+# Kaustav Vats (2016048)
+
 Q-How to run these programs?
 
 1. In terminal type 'make -f Makefile_16048' to compile all C files.

@@ -6,7 +6,7 @@
 #include <netinet/in.h>
 #include <sys/socket.h>
 #include <sys/types.h>
-#include "pthread.h"
+#include <pthread.h>
 
 #define PORT 5555
 #define BUFSIZE 1024
