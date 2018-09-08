@@ -14,26 +14,33 @@
 #define PORT 5555
 #define BUFSIZE 1024
 
-int fds[20];
+volatile int fds[20];
 char Names[20][1024];
+pthread_mutex_t lock;
+pthread_t tid[20];
 
 struct Arguments
 {
     int client_socket;
     int server_socket;
-    int * fds;
     int connections;
 };
 
 void * ReceiveAndBroadcast(void * args) {
+
     struct Arguments *arg = args;
 
+    // printf("arg-> %d\n", arg->client_socket);
+    // printf("Name: %s\n", Names[arg->client_socket]);
+
     while(1) {
+        printf("arg-> %d\n", arg->client_socket);
+        printf("Name: %s\n", Names[arg->client_socket]);
         // sleep(1);
         int j;
         for ( j=0; j<arg->connections; j++ ) {
-            if ( arg->fds[j] != -1 ) {
-                printf("%d ",arg->fds[j]);
+            if ( fds[j] != -1 ) {
+                printf("%d ", fds[j]);
             }
         }
         printf("\n");
@@ -54,20 +61,25 @@ void * ReceiveAndBroadcast(void * args) {
             else {
                 perror("recv error!\n");
             }
+            pthread_mutex_lock(&lock);
             close(arg->client_socket);
-            (arg->fds)[arg->client_socket] = -1;
-            pthread_exit(NULL);
+            fds[arg->client_socket] = -1;
+            pthread_mutex_unlock(&lock);
+
             return NULL;
         }
         else {
             // printf("MssgRecvStatus: %d\n", MssgRecvStatus);
             // Buffer[strlen(Buffer) - 1] = '\0';
+
             char NewBuffer[BUFSIZE];
             printf("Mssg Recv: %s", Buffer);
             int len = sprintf(NewBuffer, "%s: %s", Names[arg->client_socket], Buffer);
+            printf("NewBuffer: %s", NewBuffer);
+
             int i;
             for (i = 3; i < arg->connections; i++) {
-                if ((arg->fds)[i] != -1 && i != arg->server_socket) {
+                if (fds[i] != -1 && i != arg->server_socket) {
                     printf("FD: %d\n", i);
                     if (send(i, NewBuffer, len, 0) == -1) {
                         perror("send error!\n");
@@ -79,6 +91,7 @@ void * ReceiveAndBroadcast(void * args) {
             }
         }
     }
+    return NULL;
 }
 
 int main(int argc, char const *argv[])
@@ -148,8 +161,12 @@ int main(int argc, char const *argv[])
     // FD_ZERO(&Clients_FDSet);
     // FD_SET(FileDescriptor_Socket, &Clients_FDSet);
     fds[FileDescriptor_Socket] = FileDescriptor_Socket;
-    pthread_t thread;
 
+    if (pthread_mutex_init(&lock, NULL) != 0) {
+        printf("\n Mutex init failed!\n");
+        return 1;
+    }
+    int k=0;
     while(1) {
         int FileDescriptor_ClientSocket;
         /*
@@ -185,13 +202,18 @@ int main(int argc, char const *argv[])
         struct Arguments args;
         args.client_socket = FileDescriptor_ClientSocket;
         args.server_socket = FileDescriptor_Socket;
-        args.fds = &fds;
         args.connections = connections;
 
-        pthread_create(&thread, NULL, ReceiveAndBroadcast, (void *) &args);
+        int error;
+        pthread_t thread;
+        error = pthread_create(&(tid[k]), NULL, ReceiveAndBroadcast, (void *)&args);
+        if ( error != 0 ) {
+            printf("Thread can't be created :[%s]\n", strerror(error));
+        }
+        k++;
     }
 
-    pthread_exit(NULL);
+    pthread_mutex_destroy(&lock);
     close(FileDescriptor_Socket);
     return 0;
 }

@@ -24,6 +24,7 @@ void * SendMessage(void * arg) {
         if (send(client_socket, Buffer, strlen(Buffer), 0) == -1) {
             perror("send error\n");
         }
+        printf("Sent done\n");
     }
 }
 
@@ -43,20 +44,16 @@ void * ReceiveMessage(void * arg) {
                 perror("recv error!\n");
             }
             close(socket);
-            pthread_exit(NULL);
-            exit(0);
-
+            return NULL;
         }
         // printf("MssgRecvStatus: %d\n", MssgRecvStatus);
         // Buffer[strlen(Buffer) - 1] = '\0';
-        if ( strcmp(Buffer, "exit") == 0 ) {
+        if ( strncmp(Buffer, "exit", 4) == 0 ) {
             close(socket);
-            exit(0);
+            return NULL;
         }
-
         printf("\n%s\n", Buffer);
     }
-    pthread_exit(NULL);
     return NULL;
 }
 
@@ -81,7 +78,7 @@ int main(int argc, char const *argv[])
 
     Address.sin_family = AF_INET;
     Address.sin_port = htons(PORT);
-    // Address.sin_addr.s_addr = inet_addr("127.0.0.1");
+    Address.sin_addr.s_addr = inet_addr("127.0.0.1");
 
     /*
     Converts IPv4 & IPv6 from text to Binary address.
@@ -92,10 +89,10 @@ int main(int argc, char const *argv[])
     Conerts character string src into a network address structure,
     then copies the network address structure to dest.
     */
-    if ( inet_pton(AF_INET, "127.0.0.1", &Address.sin_addr) <= 0 ) {
-        perror("Invalid Address!\n");
-        exit(1);
-    }
+    // if ( inet_pton(AF_INET, "127.0.0.1", &Address.sin_addr) <= 0 ) {
+    //     perror("Invalid Address!\n");
+    //     exit(1);
+    // }
 
     memset(Address.sin_zero, '\0', sizeof Address.sin_zero);
 
@@ -114,15 +111,13 @@ int main(int argc, char const *argv[])
         perror("send error\n");
     }
 
-    pthread_t thread;
-    pthread_create(&thread, NULL, ReceiveMessage, (void *) FileDescriptor_Socket );
-    pthread_create(&thread, NULL, SendMessage, (void *) FileDescriptor_Socket);
-    // while(1) {
-        // SendMessage((void *)FileDescriptor_Socket);
-        // ReceiveMessage((void *)FileDescriptor_Socket);
-    // }
+    pthread_t thread1, thread2;
+    pthread_create(&thread1, NULL, ReceiveMessage, (void *) FileDescriptor_Socket );
+    pthread_create(&thread2, NULL, SendMessage, (void *) FileDescriptor_Socket);
 
-    pthread_exit(NULL);
+    pthread_join(thread1, NULL);
+    pthread_join(thread2, NULL);
+
     close(FileDescriptor_Socket);
     return 0;
 }
