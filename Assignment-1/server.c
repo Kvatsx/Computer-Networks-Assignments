@@ -16,7 +16,7 @@
 #define connections 20
 
 volatile int fds[connections];
-char Names[connections][1024];
+volatile char Names[connections][1024];
 pthread_mutex_t lock;
 pthread_t tid[connections];
 
@@ -37,16 +37,15 @@ void * ReceiveAndBroadcast(void * args) {
     // printf("Name: %s\n", Names[socket_client]);
 
     while(1) {
-        printf("arg-> %d\n", socket_client);
-        printf("Name: %s\n", Names[socket_client]);
-        // sleep(1);
-        int j;
-        for ( j=0; j<connections; j++ ) {
-            if ( fds[j] != -1 ) {
-                printf("%d ", fds[j]);
-            }
-        }
-        printf("\n");
+        // printf("arg-> %d\n", socket_client);
+        // printf("Name: %s\n", Names[socket_client]);
+        // int j;
+        // for ( j=0; j<connections; j++ ) {
+        //     if ( fds[j] != -1 ) {
+        //         printf("%d ", fds[j]);
+        //     }
+        // }
+        // printf("\n");
 
         char Buffer[BUFSIZE] = {0};
 
@@ -68,6 +67,7 @@ void * ReceiveAndBroadcast(void * args) {
             pthread_mutex_lock(&lock);
             close(socket_client);
             fds[socket_client] = -1;
+            memset(Names[socket_client], '\0', BUFSIZE* sizeof(char));
             pthread_mutex_unlock(&lock);
 
             return NULL;
@@ -77,7 +77,7 @@ void * ReceiveAndBroadcast(void * args) {
             // Buffer[strlen(Buffer) - 1] = '\0';
 
             char NewBuffer[BUFSIZE];
-            printf("Mssg Recv: %s", Buffer);
+            // printf("Mssg Recv: %s", Buffer);
             int len = sprintf(NewBuffer, "%s: %s", Names[socket_client], Buffer);
             printf("NewBuffer: %s", NewBuffer);
 
@@ -195,8 +195,7 @@ int main(int argc, char const *argv[])
             break;
             exit(0);
         }
-        // printf("MssgRecvStatus: %d\n", MssgRecvStatus);
-        // Buffer[strlen(Buffer) - 1] = '\0';
+        
         printf("Name Recv: %s\n", Names[FileDescriptor_ClientSocket]);
         int length = strlen(Names[FileDescriptor_ClientSocket]);
         Names[FileDescriptor_ClientSocket][length-1] = '\0';

@@ -39,7 +39,7 @@ void * ReceiveMessage(void * arg) {
 
     int socket = (int) arg;
     while(1) {
-        // sleep(1);
+        
         char Buffer[BUFSIZE] = {0};
 
         int MssgRecvStatus;
@@ -82,7 +82,7 @@ int main(int argc, char const *argv[])
 
     Address.sin_family = AF_INET;
     Address.sin_port = htons(PORT);
-    Address.sin_addr.s_addr = inet_addr("127.0.0.1");
+    // Address.sin_addr.s_addr = inet_addr("127.0.0.1");
 
     /*
     Converts IPv4 & IPv6 from text to Binary address.
@@ -93,10 +93,10 @@ int main(int argc, char const *argv[])
     Conerts character string src into a network address structure,
     then copies the network address structure to dest.
     */
-    // if ( inet_pton(AF_INET, "127.0.0.1", &Address.sin_addr) <= 0 ) {
-    //     perror("Invalid Address!\n");
-    //     exit(1);
-    // }
+    if ( inet_pton(AF_INET, "127.0.0.1", &Address.sin_addr) <= 0 ) {
+        perror("Invalid Address!\n");
+        exit(1);
+    }
 
     memset(Address.sin_zero, '\0', sizeof Address.sin_zero);
 
