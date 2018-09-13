@@ -8,7 +8,7 @@
 #include <sys/types.h>
 #include <pthread.h>
 
-#define PORT 5555
+// #define PORT 5555
 #define BUFSIZE 1024
 
 pthread_t thread1, thread2;
@@ -17,12 +17,10 @@ void * SendMessage(void * arg) {
 
     int client_socket = (int) arg;
     char Buffer[BUFSIZE] = {0};
+    printf("Type your message and press ENTER\n");
 
-    printf("client_socket: %d\n", client_socket);
     while(1) {
-        // printf("%s ", "Enter your mssg:");
         fgets(Buffer, BUFSIZE, stdin);
-        // printf("Input taken\n");
         if (strncmp(Buffer, "exit", 4) == 0) {
             close(client_socket);
             pthread_exit(&thread2);
@@ -31,7 +29,6 @@ void * SendMessage(void * arg) {
         if (send(client_socket, Buffer, strlen(Buffer), 0) == -1) {
             perror("send error\n");
         }
-        // printf("Sent done\n");
     }
 }
 
@@ -69,6 +66,14 @@ int main(int argc, char const *argv[])
     char Buffer[BUFSIZE] = {0};
     int MssgRecvStatus;
 
+    // printf("argc: %d\n", argc);
+    if (argc != 3) {
+        printf("Usage: ./client <ip> <port>\n");
+        return 1;
+    }
+
+    int PORT = strtol(argv[2], NULL, 10);
+
     /* Creating a server File descriptor.
     IPv4
     SOCK_STREAM: TCP connection
@@ -82,7 +87,7 @@ int main(int argc, char const *argv[])
 
     Address.sin_family = AF_INET;
     Address.sin_port = htons(PORT);
-    // Address.sin_addr.s_addr = inet_addr("127.0.0.1");
+    // Address.sin_addr.s_addr = inet_addr(argv[1]);
 
     /*
     Converts IPv4 & IPv6 from text to Binary address.
@@ -93,7 +98,7 @@ int main(int argc, char const *argv[])
     Conerts character string src into a network address structure,
     then copies the network address structure to dest.
     */
-    if ( inet_pton(AF_INET, "127.0.0.1", &Address.sin_addr) <= 0 ) {
+    if ( inet_pton(AF_INET, argv[1], &Address.sin_addr) <= 0 ) {
         perror("Invalid Address!\n");
         exit(1);
     }

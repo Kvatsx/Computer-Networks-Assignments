@@ -11,17 +11,15 @@
 #include <sys/time.h>
 #include <pthread.h>
 
-#define PORT 5555
+// #define PORT 5555
 #define BUFSIZE 1024
 #define connections 20
 
 volatile int fds[connections];
 volatile char Names[connections][1024];
-pthread_mutex_t lock;
 pthread_t tid[connections];
 
-struct Arguments
-{
+struct Arguments {
     int client_socket;
     int server_socket;
 };
@@ -42,20 +40,15 @@ void * RecvExit(void * args) {
                         perror("send error!\n");
                     }
                     else {
-                        pthread_mutex_lock(&lock);
                         close(i);
                         fds[i] = -1;
                         pthread_cancel(&(tid[i]));
                         printf("Mssg sent!\n");
-                        pthread_mutex_unlock(&lock);
                     }
                 }
             }
             printf("Exiting Server!\n");
-            close(main_socket);
-            pthread_mutex_destroy(&lock);
-            pthread_exit(&(tid[main_socket]));
-            return 0;
+            exit(0);
         }
         else {
             printf("Usage: type 'exit' to close the server.\n");
@@ -85,16 +78,14 @@ void * ReceiveAndBroadcast(void * args) {
         if ((MssgRecvStatus = recv(socket_client, Buffer, BUFSIZE, 0)) <= 0)
         {
             if (MssgRecvStatus == 0) {
-                printf("socket %d hung up\n", socket_client);
+                printf("Socket %d hung up\n", socket_client);
             }
             else {
                 perror("recv error!\n");
             }
-            pthread_mutex_lock(&lock);
             close(socket_client);
             fds[socket_client] = -1;
             memset(Names[socket_client], '\0', BUFSIZE* sizeof(char));
-            pthread_mutex_unlock(&lock);
             pthread_exit(&tid[socket_client]);
             return NULL;
         }
@@ -132,6 +123,14 @@ int main(int argc, char const *argv[])
     int OptValue = 1;
     socklen_t OptLength = sizeof(OptValue); 
     int LengthAddress = sizeof(Address);
+
+    printf("argc: %d\n", argc);
+    if ( argc != 2 ) {
+        printf("Usage: ./server <port>\n");
+        return 1;
+    }
+
+    int PORT = strtol(argv[1], NULL, 10);
 
     // fd_set Clients_FDSet;
     // int fds[20];
@@ -185,16 +184,11 @@ int main(int argc, char const *argv[])
         exit(1);
     }
     printf("Socket created...\n");
-    printf("Waiting for clients on port 5555\n");
+    printf("Waiting for clients on port %d\n", PORT);
 
     // FD_ZERO(&Clients_FDSet);
     // FD_SET(FileDescriptor_Socket, &Clients_FDSet);
     fds[FileDescriptor_Socket] = FileDescriptor_Socket;
-
-    if (pthread_mutex_init(&lock, NULL) != 0) {
-        printf("\n Mutex init failed!\n");
-        return 1;
-    }
 
     int err;
     err = pthread_create(&(tid[FileDescriptor_Socket]), NULL, RecvExit, (void *) FileDescriptor_Socket);
@@ -211,7 +205,7 @@ int main(int argc, char const *argv[])
             exit(1);
         }
         printf("ClientSocket: %d\n", FileDescriptor_ClientSocket);
-        printf("new connection from port %d \n", ntohs(Address.sin_port));
+        printf("New connection from port %d \n", ntohs(Address.sin_port));
         fds[FileDescriptor_ClientSocket] = FileDescriptor_ClientSocket;
         int MssgRecvStatus;
         if ((MssgRecvStatus = recv(FileDescriptor_ClientSocket, Names[FileDescriptor_ClientSocket], BUFSIZE, 0)) <= 0) {
@@ -243,7 +237,6 @@ int main(int argc, char const *argv[])
         }
     }
 
-    pthread_mutex_destroy(&lock);
     close(FileDescriptor_Socket);
     return 0;
 }
