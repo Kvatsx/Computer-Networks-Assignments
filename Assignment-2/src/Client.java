@@ -30,47 +30,47 @@ public class Client {
 //        newConnectionHandler();
     }
 
-//    public void newConnectionHandler() throws IOException {
-//        byte[] buffer = Packet.getBytes(new Packet(0, "SYN"));
-//        DatagramPacket datagramPacket = new DatagramPacket(buffer, buffer.length, IPAddress, PORT);
-//        System.out.println("Sending: SYN");
-//        clientSocket.send(datagramPacket);
-//
-//        buffer = new byte[BUFFSIZE];
-//        datagramPacket = new DatagramPacket(buffer, buffer.length);
-//        clientSocket.receive(datagramPacket);
-//        Packet p = Packet.getObject(datagramPacket.getData());
-//        System.out.println("From Server: " + p.getData());
-//
-//        buffer = Packet.getBytes(new Packet(0, "ACK"));
-//        datagramPacket = new DatagramPacket(buffer, buffer.length, IPAddress, PORT);
-//        System.out.println("Sending: ACK");
-//        clientSocket.send(datagramPacket);
-//
-//        System.out.println("Connection established!\n");
-//    }
+    public void newConnectionHandler() throws IOException {
+        byte[] buffer = Packet.getBytes(new Packet(0, "SYN"));
+        DatagramPacket datagramPacket = new DatagramPacket(buffer, buffer.length, IPAddress, PORT);
+        System.out.println("Sending: SYN");
+        clientSocket.send(datagramPacket);
 
-//    private class SendMessageHandler implements Runnable {
-//
-//        public synchronized void run() {
-//            try {
-//                boolean DataSent = false;
-//                while ( !DataSent ) {
-//                    for ( int i=0; i<PacketCount; i++ ) {
-//                        buffer = Packet.getBytes(new Packet(AckCount, "ACK"));
-//                        datagramPacket = new DatagramPacket(buffer, buffer.length, IPAddress, PORT);
-//                        System.out.println("Sending: Ack "+AckCount);
-//                        clientSocket.send(datagramPacket);
-//
-//                        if ( AckReceived[] )
-//                    }
-//                }
-//            }
-//            catch (IOException e) {
-//                e.printStackTrace();
-//            }
-//        }
-//    }
+        buffer = new byte[BUFFSIZE];
+        datagramPacket = new DatagramPacket(buffer, buffer.length);
+        clientSocket.receive(datagramPacket);
+        Packet p = Packet.getObject(datagramPacket.getData());
+        System.out.println("From Server: " + p.getData());
+
+        buffer = Packet.getBytes(new Packet(0, "ACK"));
+        datagramPacket = new DatagramPacket(buffer, buffer.length, IPAddress, PORT);
+        System.out.println("Sending: ACK");
+        clientSocket.send(datagramPacket);
+
+        System.out.println("Connection established!\n");
+    }
+
+    private class SendMessageHandler implements Runnable {
+
+        public synchronized void run() {
+            try {
+                boolean DataSent = false;
+                while ( !DataSent ) {
+                    for ( int i=0; i<PacketCount; i++ ) {
+                        buffer = Packet.getBytes(new Packet(AckCount, "ACK"));
+                        datagramPacket = new DatagramPacket(buffer, buffer.length, IPAddress, PORT);
+                        System.out.println("Sending: Ack "+AckCount);
+                        clientSocket.send(datagramPacket);
+
+                        if ( AckReceived[] )
+                    }
+                }
+            }
+            catch (IOException e) {
+                e.printStackTrace();
+            }
+        }
+    }
 
     private class ReceiverMessageHandler implements Runnable {
 

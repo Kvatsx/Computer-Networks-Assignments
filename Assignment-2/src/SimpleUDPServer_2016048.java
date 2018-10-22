@@ -7,47 +7,23 @@ import java.net.InetAddress;
 import java.net.SocketException;
 import java.util.Date;
 
-public class SimpleUDPClient {
-    private DatagramSocket ClientSocket;
+import static java.lang.Thread.sleep;
+
+public class SimpleUDPServer_2016048 {
+    private DatagramSocket ServerSocket;
     private int PacketCount;
     private Packet[] data;
     private boolean[] AckBuffer;
     private boolean DataSend;
+
     private static final int BUFFSIZE = 65535;
 
-    // Server
-    private InetAddress IPAddress;
-    private int Port;
-
-    public SimpleUDPClient(String ipAddress, int portNumber, int packetCount) throws SocketException, IOException {
-        this.ClientSocket = new DatagramSocket();
-        this.IPAddress = InetAddress.getByName(ipAddress);
-        this.Port = portNumber;
+    public SimpleUDPServer_2016048(int Port, int packetCount) throws SocketException, IOException {
+        this.ServerSocket = new DatagramSocket(Port);
         this.PacketCount = packetCount;
         this.data = new Packet[packetCount];
+        this.AckBuffer = new boolean[packetCount];
         this.DataSend = false;
-
-        newConnectionHandler();
-    }
-
-    public void newConnectionHandler() throws IOException {
-        byte[] buffer = Packet.getBytes(new Packet(0, "SYN"));
-        DatagramPacket datagramPacket = new DatagramPacket(buffer, buffer.length, IPAddress, Port);
-        System.out.println("Sending: SYN");
-        ClientSocket.send(datagramPacket);
-
-        buffer = new byte[BUFFSIZE];
-        datagramPacket = new DatagramPacket(buffer, buffer.length);
-        ClientSocket.receive(datagramPacket);
-        Packet p = Packet.getObject(datagramPacket.getData());
-        System.out.println("From Server: " + p.getData());
-
-        buffer = Packet.getBytes(new Packet(0, "ACK"));
-        datagramPacket = new DatagramPacket(buffer, buffer.length, IPAddress, Port);
-        System.out.println("Sending: ACK");
-        ClientSocket.send(datagramPacket);
-
-        System.out.println("Connection established!\n");
     }
 
     private class RecvPacketHandler implements Runnable {
@@ -57,15 +33,17 @@ public class SimpleUDPClient {
                 for ( int i=0; i<PacketCount; i++ ) {
                     byte[] buffer = new byte[BUFFSIZE];
                     DatagramPacket datagramPacket = new DatagramPacket(buffer, buffer.length);
-                    ClientSocket.receive(datagramPacket);
+                    ServerSocket.receive(datagramPacket);
                     Packet p = Packet.getObject(datagramPacket.getData());
 
+                    InetAddress ipClient = datagramPacket.getAddress();
+                    int portClient = datagramPacket.getPort();
                     data[p.getSeqNumber()] = p;
                     System.out.println("\nReceived Packet: "+p.getSeqNumber()+"\nData: "+p.getData());
                     buffer = Packet.getBytes(new Packet(p.getSeqNumber(), "ACK"));
-                    datagramPacket = new DatagramPacket(buffer, buffer.length, IPAddress, Port);
-                    System.out.println("Sending: Ack "+p.getSeqNumber());
-                    ClientSocket.send(datagramPacket);
+                    datagramPacket = new DatagramPacket(buffer, buffer.length, ipClient, portClient);
+                    System.out.println("Sending: ACK "+p.getSeqNumber());
+                    ServerSocket.send(datagramPacket);
                 }
                 int count = 0;
                 for ( int i=0; i<PacketCount; i++ ) {
@@ -89,12 +67,12 @@ public class SimpleUDPClient {
 
     public static void main(String args[]) throws SocketException, IOException {
         System.out.println("Welcome to Server-Client Chat Application...\n");
-        if ( args.length != 3 ) {
-            System.out.println("Usage: java Server <ip address> <Port> <Packet Count>");
+        if ( args.length != 2 ) {
+            System.out.println("Usage: java Server <Port> <Packet Count>");
             return;
         }
-        SimpleUDPClient client = new SimpleUDPClient(args[0], Integer.parseInt(args[1]), Integer.parseInt(args[2]));
-        new Thread(client.new RecvPacketHandler()).start();
+        SimpleUDPServer_2016048 server = new SimpleUDPServer_2016048(Integer.parseInt(args[0]), Integer.parseInt(args[1]));
+        new Thread(server.new RecvPacketHandler()).start();
     }
 
 }

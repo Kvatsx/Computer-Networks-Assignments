@@ -17,6 +17,8 @@ public class Server {
 
     private volatile int PacketCount;
     private volatile int NextSeqNumber;
+    private Packet[] data;
+
     private volatile Long[] timeForACK;
     private static final Long RTT = 1000L; // RTT in ms
 
@@ -31,6 +33,8 @@ public class Server {
         this.PacketCount = 1000;
         this.NextSeqNumber = 0;
         this.timeForACK = new Long[3000];
+        this.data = new Packet[this.PacketCount];
+
         for ( int i=0; i<3000; i++ ) {
             timeForACK[i] = 0L;
         }
