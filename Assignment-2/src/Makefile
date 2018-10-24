@@ -39,6 +39,7 @@ JC = javac
 #
 
 CLASSES = \
+		Packet.java \
         Server_2016048.java \
         Client_2016048.java \
         SimpleUDPClient_2016048.java \

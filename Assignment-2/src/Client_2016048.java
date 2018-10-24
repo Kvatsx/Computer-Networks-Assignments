@@ -96,7 +96,7 @@ public class Client_2016048 {
         return d.getTime();
     }
 
-    public static void main(String args[]) throws IOException, SocketException {
+    public static void main(String args[]) throws IOException {
         System.out.println("Welcome to Server-Client Chat Application...\n");
         if ( args.length != 4 ) {
             System.out.println("Usage: java Server <ip address> <Port> <Packet Count> <Window Size>");

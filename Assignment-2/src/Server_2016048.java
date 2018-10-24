@@ -12,7 +12,6 @@ public class Server_2016048 {
     private boolean[] Forwarded;
     private int PacketCount;
     private int WindowSize;
-
     private static final int BUFFSIZE = 65535;
 
     public Server_2016048(int Port, int packetCount, int windowSize) throws SocketException {
@@ -33,10 +32,7 @@ public class Server_2016048 {
                     DatagramPacket datagramPacket = new DatagramPacket(buffer, buffer.length);
                     ServerSocket.receive(datagramPacket);
                     Packet p = Packet.getObject(datagramPacket.getData());
-//                    if ( p.getSeqNumber() == 2 ) {
-//                        System.out.println("Packet dropped for testing purpose!");
-//                        continue;
-//                    }
+
                     if ( data[p.getSeqNumber()] != null ) {
                         System.out.println("Received duplicate packet with Seq No: "+p.getSeqNumber());
                     }
@@ -76,7 +72,7 @@ public class Server_2016048 {
 
     }
 
-    public static void main(String args[]) throws IOException, SocketException {
+    public static void main(String args[]) throws IOException {
         System.out.println("Welcome to Server-Client Chat Application...\n");
         if ( args.length != 3 ) {
             System.out.println("Usage: java Server <Port> <Packet Count> <Window Size>");
