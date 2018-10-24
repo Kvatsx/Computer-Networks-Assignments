@@ -37,12 +37,12 @@ public class Server_2016048 {
 //                        System.out.println("Packet dropped for testing purpose!");
 //                        continue;
 //                    }
-                    if ( p.getSeqNumber() < deliveryCount || p.getSeqNumber() >= (deliveryCount+WindowSize) ) {
+                    if ( data[p.getSeqNumber()] != null ) {
+                        System.out.println("Received duplicate packet with Seq No: "+p.getSeqNumber());
+                    }
+                    else if ( p.getSeqNumber() < deliveryCount || p.getSeqNumber() >= (deliveryCount+WindowSize) ) {
                         System.out.println("Flow Error: Packet Discarded!");
                         continue;
-                    }
-                    else if ( data[p.getSeqNumber()] != null ) {
-                        System.out.println("Received duplicate packet with Seq No: "+p.getSeqNumber());
                     }
                     else {
                         data[p.getSeqNumber()] = p;
