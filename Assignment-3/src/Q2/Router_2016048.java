@@ -6,46 +6,53 @@ import java.lang.*;
 
 
 public class Router_2016048 {
-    
+    private int N;
+    private int ID;
+    private int[][] Graph;
 
-    public static void main(String[] args) throws IOException{
-        Reader.init(System.in);
-        
-    }
-}
-
-
-/** Class for buffered reading int and double values */
-class Reader {
-    static BufferedReader reader;
-    static StringTokenizer tokenizer;
-
-    /** call this method to initialize reader for InputStream */
-    static void init(InputStream input) {
-        reader = new BufferedReader(
-                     new InputStreamReader(input) );
-        tokenizer = new StringTokenizer("");
+    public Router_2016048(int n, int id) {
+        this.N = n;
+        this.ID = id;
+        this.Graph = new int[this.N][this.N];
+        Initialize();
     }
 
-    /** get next word */
-    static String next() throws IOException {
-        while ( ! tokenizer.hasMoreTokens() ) {
-            //TODO add check for eof if necessary
-            tokenizer = new StringTokenizer(
-                   reader.readLine() );
+    private void Initialize() {
+        for ( int i=0; i<this.N; i++ ) {
+            for ( int j=0; j<this.N; j++ ) {
+                this.Graph[i][j] = Integer.MAX_VALUE;
+            }
         }
-        return tokenizer.nextToken();
+        this.Graph[this.ID][this.ID] = 0;
     }
 
-    static int nextInt() throws IOException {
-        return Integer.parseInt( next() );
+    public int getN() {
+        return this.N;
     }
 
-    static long nextLong() throws IOException {
-        return Long.parseLong( next() );
+    public int getID() {
+        return this.ID;
     }
-	
-    static double nextDouble() throws IOException {
-        return Double.parseDouble( next() );
+
+    public int[][] getGraph() {
+        return this.Graph;
+    }
+
+    public void update(Router_2016048 router) {
+        int routerID = router.ID;
+        for ( int i=0; i<this.N; i++ ) {
+            this.Graph[routerID][i] = router.Graph[routerID][i];
+        }
+    }
+
+    public String toString() {
+        String out = this.ID + "\n";
+        for ( int i=0; i<N; i++ ) {
+            for ( int j=0; j<N; j++ ) {
+                out += Graph[i][j] + " ";
+            }
+            out += "\n";
+        }
+        return out;
     }
 }
