@@ -38,11 +38,27 @@ public class Router_2016048 {
         return this.Graph;
     }
 
-    public void update(Router_2016048 router) {
+    public boolean update(Router_2016048 router) {
+        boolean flag = true;
         int routerID = router.ID;
         for ( int i=0; i<this.N; i++ ) {
-            this.Graph[routerID][i] = router.Graph[routerID][i];
+            if ( this.Graph[routerID][i] != router.Graph[routerID][i] ) {
+                this.Graph[routerID][i] = router.Graph[routerID][i];
+                flag = false;
+            }
         }
+        return flag;
+    }
+
+    public Router_2016048 getNode() {
+        Router_2016048 abc = new Router_2016048(this.N, this.ID);
+        for ( int i=0; i<this.N; i++ ) {
+            for ( int j=0; j<this.N; j++ ) {
+                abc.Graph[i][j] = this.Graph[i][j];
+            }
+        }
+        abc.Graph[this.ID][this.ID] = 0;
+        return abc;
     }
 
     public String toString() {
